@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Targmanich — Թարգմանիչ</title>
+<meta name="description" content="Translate any language into any other with the free Gemini 3.8 Live models — Armenian to English by default. Runs entirely in your browser.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;0,700;1,400;1,500&family=Alegreya+SC:wght@500;700&family=Noto+Serif+Armenian:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/targmanich.css">
+<script type="module" src="js/app.js"></script>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="bird" viewBox="0 0 54 38">
+      <path class="tail" d="M14 27 C 8 26 3.5 22 2 15.5 C 6 19.5 10 21.5 15 22 M13.5 29.5 C 8 31 4 34.5 3 37 C 7.5 34.5 11.5 33.5 17 32.5"/>
+      <path class="body" d="M12 28.5 C 13 19.5 20.5 13.5 30 14.2 C 32 9.2 36 6.6 40.5 7.6 C 44 8.4 45.8 11 45.6 14 L 52.5 15.6 L 45 18 C 43.6 24.6 37.4 30 29.5 31.6 C 23 32.8 16.5 31.6 12 28.5 Z"/>
+      <path class="wing" d="M18.5 22.5 C 23.5 18.2 31.5 18.2 36.6 22 C 31.6 22.2 26.6 24.6 22.4 28.4 C 21.6 26 20.2 24 18.5 22.5 Z"/>
+      <circle class="eye" cx="41" cy="12" r="1.25"/>
+      <path class="legs" d="M26 31.5 L 25 37 M31 31 L 31.5 37"/>
+    </symbol>
+    <symbol id="pomegranate" viewBox="0 0 34 38">
+      <path class="crown" d="M11.5 10.5 L 12.4 4.2 L 15 8 L 17 2.5 L 19 8 L 21.6 4.2 L 22.5 10.5 Z"/>
+      <path class="fruit" d="M17 9.5 C 26 9.5 30.5 15.5 30.5 22.5 C 30.5 30.5 24.5 36 17 36 C 9.5 36 3.5 30.5 3.5 22.5 C 3.5 15.5 8 9.5 17 9.5 Z"/>
+      <path class="seam" d="M10 19 C 12.5 25 12.5 29 10.5 33 M17 14 L 17 33 M24 19 C 21.5 25 21.5 29 23.5 33"/>
+    </symbol>
+    <symbol id="rosette" viewBox="0 0 24 24">
+      <path d="M12 1.5 L14.2 9.8 L22.5 12 L14.2 14.2 L12 22.5 L9.8 14.2 L1.5 12 L9.8 9.8 Z"/>
+      <circle cx="12" cy="12" r="2.4"/>
+    </symbol>
+    <symbol id="arch-shape" viewBox="0 0 1000 84" preserveAspectRatio="none">
+      <path class="band" d="M0 84 C 0 30 210 2 500 2 C 790 2 1000 30 1000 84 L 982 84 C 982 44 774 18 500 18 C 226 18 18 44 18 84 Z"/>
+      <path class="edge" d="M0 84 C 0 30 210 2 500 2 C 790 2 1000 30 1000 84"/>
+      <path class="edge" d="M18 84 C 18 44 226 18 500 18 C 774 18 982 44 982 84"/>
+      <path class="pearls" d="M9 84 C 9 37 218 10 500 10 C 782 10 991 37 991 84"/>
+    </symbol>
+  </defs>
+</svg>
+
+<header class="mast">
+  <a class="mark" href="./" aria-label="Targmanich">
+    <span class="mark-letter" lang="hy" aria-hidden="true">Թ</span>
+    <span class="mark-words">
+      <span class="mark-name">Targmanich</span>
+      <span class="mark-sub" lang="hy">Թարգմանիչ</span>
+    </span>
+  </a>
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" id="tab-desk" aria-controls="desk" aria-selected="true" data-tab="desk"><span class="num" lang="hy">Ա</span><span data-i18n="tab.desk">Desk</span></button>
+    <button role="tab" id="tab-batch" aria-controls="batch" aria-selected="false" data-tab="batch"><span class="num" lang="hy">Բ</span><span data-i18n="tab.batch">Batch</span></button>
+    <button role="tab" id="tab-notes" aria-controls="notes" aria-selected="false" data-tab="notes"><span class="num" lang="hy">Գ</span><span data-i18n="tab.notes">Notes</span></button>
+  </nav>
+  <div class="mast-tools">
+    <button id="keysBtn" class="keychip" type="button">
+      <span class="keychip-dot" aria-hidden="true"></span>
+      <span class="keychip-text"><span data-i18n="keys.btn">Keys &amp; engines</span><small id="keysState"></small></span>
+    </button>
+    <button id="uiLangBtn" class="tool" type="button" lang="fr">FR</button>
+    <button id="themeBtn" class="tool" type="button" data-i18n-title="theme" title="Day / night">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.2"/><path d="M10 2.8 A 7.2 7.2 0 0 1 10 17.2 Z"/></svg>
+    </button>
+  </div>
+</header>
+<div class="braid" aria-hidden="true"></div>
+
+<main>
+
+<!-- Ա · Desk -->
+<section id="desk" class="sheet" role="tabpanel" aria-labelledby="tab-desk">
+  <div class="canon">
+    <div class="bay">
+      <div class="crown" aria-hidden="true">
+        <svg class="bird"><use href="#bird"/></svg>
+        <svg class="pom"><use href="#pomegranate"/></svg>
+        <svg class="bird flip"><use href="#bird"/></svg>
+      </div>
+      <svg class="arch" aria-hidden="true" preserveAspectRatio="none"><use href="#arch-shape"/></svg>
+      <div class="bay-body">
+        <i class="shaft left" aria-hidden="true"></i><i class="shaft right" aria-hidden="true"></i>
+        <div class="leaf-head">
+          <label class="rubric" for="srcLang" data-i18n="from">From</label>
+          <select id="srcLang" class="lang-select"></select>
+        </div>
+        <textarea id="srcText" class="ruled" spellcheck="false" data-i18n-ph="src.ph" placeholder="Write or paste the text here…"></textarea>
+        <div class="leaf-foot">
+          <span id="srcCount" class="fine"></span>
+          <button id="clearBtn" class="link" type="button" data-i18n="clear">clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="spine">
+      <svg class="rosette" aria-hidden="true"><use href="#rosette"/></svg>
+      <button id="swapBtn" class="swap" type="button" data-i18n-title="swap" title="Swap languages">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8 H 18 M 14 4 L 18 8 L 14 12 M20 16 H 6 M 10 12 L 6 16 L 10 20"/></svg>
+      </button>
+    </div>
+
+    <div class="bay">
+      <div class="crown" aria-hidden="true">
+        <svg class="bird"><use href="#bird"/></svg>
+        <svg class="pom"><use href="#pomegranate"/></svg>
+        <svg class="bird flip"><use href="#bird"/></svg>
+      </div>
+      <svg class="arch" aria-hidden="true" preserveAspectRatio="none"><use href="#arch-shape"/></svg>
+      <div class="bay-body">
+        <i class="shaft left" aria-hidden="true"></i><i class="shaft right" aria-hidden="true"></i>
+        <div class="leaf-head">
+          <label class="rubric" for="tgtLang" data-i18n="into">Into</label>
+          <select id="tgtLang" class="lang-select"></select>
+        </div>
+        <div id="tgtText" class="output ruled" tabindex="0" aria-live="polite"></div>
+        <div class="leaf-foot">
+          <span id="colophon" class="fine colophon"></span>
+          <button id="copyBtn" class="link" type="button" data-i18n="copy">copy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="desk-actions">
+    <button id="translateBtn" class="seal" type="button">
+      <span data-i18n="translate">Translate</span>
+      <span class="seal-hy" lang="hy">Թարգմանել</span>
+    </button>
+    <span class="kbd-hint"><kbd>Ctrl</kbd> + <kbd>Enter</kbd></span>
+    <p id="deskStatus" class="status" role="status"></p>
+  </div>
+</section>
+
+<!-- Բ · Batch -->
+<section id="batch" class="sheet" role="tabpanel" aria-labelledby="tab-batch" hidden>
+  <header class="sheet-head">
+    <h1><span class="initial" lang="hy">Բ</span><span data-i18n="batch.title">Many posts at once</span></h1>
+    <p class="lede" data-i18n="batch.lede"></p>
+  </header>
+
+  <div class="batch-grid">
+    <div class="intake">
+      <h2 class="step"><span class="roman">I</span><span data-i18n="step.load">Load</span></h2>
+      <label id="drop" class="drop">
+        <input id="fileInput" type="file" accept=".txt,.csv,.tsv,.json,.jsonl,.ndjson,text/plain,text/csv,application/json" hidden>
+        <span class="drop-main" data-i18n="drop.main">Drop a file here</span>
+        <span class="drop-or" data-i18n="drop.or">or choose one</span>
+        <span class="drop-kinds">.txt · .csv · .tsv · .json · .jsonl</span>
+      </label>
+      <details class="paste">
+        <summary data-i18n="paste.sum">…or paste posts, one per line</summary>
+        <textarea id="pasteBox" class="ruled small" spellcheck="false" rows="6"></textarea>
+        <button id="pasteUse" class="plain" type="button" data-i18n="paste.use">Use these lines</button>
+      </details>
+
+      <div id="dsInfo" class="ds" hidden>
+        <p id="dsName" class="ds-name"></p>
+        <label id="dsColumnRow" class="field" hidden>
+          <span data-i18n="ds.column">Column to translate</span>
+          <select id="dsColumn"></select>
+        </label>
+        <label id="dsHeaderRow" class="check" hidden>
+          <input id="dsHeader" type="checkbox" checked> <span data-i18n="ds.header">First row is a header</span>
+        </label>
+        <label id="dsModeRow" class="field" hidden>
+          <span data-i18n="ds.per">One post per</span>
+          <select id="dsMode">
+            <option value="line" data-i18n="ds.line">line</option>
+            <option value="blank" data-i18n="ds.blank">block between blank lines</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="pair">
+        <label class="field"><span class="rubric" data-i18n="from">From</span><select id="srcLang2" class="lang-select"></select></label>
+        <span class="pair-arrow" aria-hidden="true">→</span>
+        <label class="field"><span class="rubric" data-i18n="into">Into</span><select id="tgtLang2" class="lang-select"></select></label>
+      </div>
+    </div>
+
+    <div class="works">
+      <h2 class="step"><span class="roman">II</span><span data-i18n="step.scribes">The engines at work</span></h2>
+      <div id="lanes" class="lanes"></div>
+      <div class="tally">
+        <div><b id="tDone">0</b><span data-i18n="t.done">translated</span><small id="tTotal"></small></div>
+        <div><b id="tRate">0</b><span data-i18n="t.rate">posts / second</span></div>
+        <div><b id="tEta">—</b><span data-i18n="t.eta">time left</span></div>
+        <div><b id="tFail">0</b><span data-i18n="t.fail">failed</span></div>
+      </div>
+      <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+      <div class="controls">
+        <button id="runBtn" class="seal small" type="button" data-i18n="begin" disabled>Begin</button>
+        <button id="stopBtn" class="plain" type="button" data-i18n="stop" disabled>Stop</button>
+        <button id="retryBtn" class="plain" type="button" data-i18n="retry" hidden>Retry failed</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ledger-wrap">
+    <div class="ledger-bar">
+      <h2 class="step"><span class="roman">III</span><span data-i18n="step.ledger">Ledger</span></h2>
+      <div class="filters" role="radiogroup">
+        <button class="filter" type="button" data-filter="all" aria-pressed="true" data-i18n="ledger.all">All</button>
+        <button class="filter" type="button" data-filter="done" aria-pressed="false" data-i18n="ledger.done">Done</button>
+        <button class="filter" type="button" data-filter="failed" aria-pressed="false" data-i18n="ledger.failed">Failed</button>
+        <button class="filter" type="button" data-filter="pending" aria-pressed="false" data-i18n="ledger.pending">Pending</button>
+      </div>
+      <div class="export">
+        <span class="rubric" data-i18n="ledger.export">Export</span>
+        <button class="link" type="button" data-export="csv">CSV</button>
+        <button class="link" type="button" data-export="json">JSON</button>
+        <button class="link" type="button" data-export="jsonl">JSONL</button>
+        <button class="link" type="button" data-export="txt">TXT</button>
+      </div>
+    </div>
+    <div class="ledger-scroll">
+      <table class="ledger">
+        <thead><tr>
+          <th class="c-n">№</th>
+          <th data-i18n="col.source">Source</th>
+          <th data-i18n="col.target">Translation</th>
+          <th class="c-l" data-i18n="col.lang">Lang</th>
+          <th class="c-e" data-i18n="col.engine">Engine</th>
+        </tr></thead>
+        <tbody id="ledgerBody"></tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <button id="prevPage" class="link" type="button" data-i18n="ledger.prev">previous</button>
+      <span id="pageInfo" class="fine"></span>
+      <button id="nextPage" class="link" type="button" data-i18n="ledger.next">next</button>
+    </div>
+  </div>
+</section>
+
+<!-- Գ · Notes -->
+<section id="notes" class="sheet notes" role="tabpanel" aria-labelledby="tab-notes" hidden>
+  <article data-lang-block="en">
+    <h1><span class="initial" lang="hy">Գ</span>How the desk works</h1>
+    <p class="lede">The two free models on this tier, <em>Gemini 3.8 Live</em> and <em>Gemini 3.8 Live Extended Thinking</em>, are voice models. They speak; they cannot answer in text — the API refuses a text-only reply.</p>
+    <div class="cols">
+      <h2>The function-call trick</h2>
+      <p>Targmanich never lets them say the translation aloud. Each session hands the model one function, <code>deliver(items)</code>, and asks it to answer by calling it. The arguments of that call arrive as JSON text: exact, with line breaks, emojis, links and hashtags intact, in about two seconds instead of half a minute of synthesized speech.</p>
+      <p>Because the answer is a structured field, there is no room for “Here is the translation:”. The prompt also treats every segment as data: a post that says “ignore your instructions” is translated, not obeyed. A small safety net strips any stray label or wrapping quotes that still get through.</p>
+      <h2>Batches and rotation</h2>
+      <p>Every request is one Live session, a WebSocket straight from your browser to Google. Posts travel in batches of up to 30 (Live) or 40 (Extended Thinking), each with an id, so a missing segment is noticed and sent again.</p>
+      <p>The plain Live engine is fast and cheap, so it always goes first. The Extended Thinking engine only gets the overflow, once the first one has spent its tokens for the minute. A slow batch still out after six seconds when the queue runs dry is sent again to the fast engine, and the first answer wins.</p>
+      <h2>What was measured</h2>
+      <table class="facts">
+        <thead><tr><th></th><th>3.8 Live</th><th>3.8 Live Extended Thinking</th></tr></thead>
+        <tbody>
+          <tr><th>Answer time per batch</th><td>≈ 2 s</td><td>6 – 30 s</td></tr>
+          <tr><th>Tokens, batch of 10 posts</th><td>≈ 1 900</td><td>≈ 7 500</td></tr>
+          <tr><th>Hidden cost per session</th><td>≈ 1 000</td><td>≈ 3 400, billed twice</td></tr>
+          <tr><th>Must speak before the call</th><td>no</td><td>yes, one short word</td></tr>
+          <tr><th>Free limit</th><td>65 000 tokens/min</td><td>65 000 tokens/min</td></tr>
+        </tbody>
+      </table>
+      <p>300 short Armenian posts took 15 seconds on one key. Once both minute budgets are in use, one key holds about 14 posts per second. Keys from separate Google Cloud projects add more lanes.</p>
+      <h2>Privacy</h2>
+      <p>There is no server. Your keys and your texts go from this browser to Google’s API and nowhere else. Keys are saved on this device only if you tick “remember”.</p>
+      <h2>Limits</h2>
+      <p>Free models come and go. If Google renames them, change the model ids under <em>Keys &amp; engines</em>. The free tier accepts only a few simultaneous sessions per key; when the server refuses, Targmanich halves its pace, waits, and tries again.</p>
+      <h2>The name</h2>
+      <p><span lang="hy">Թարգմանիչ</span> (<em>targmanich</em>) is Armenian for “translator”. Around 405, Mesrop Mashtots devised the Armenian alphabet so that texts could be translated into Armenian; the Church still keeps the Feast of the Holy Translators every October. The arches over the desk come from the canon tables of Armenian Gospel books: columns of parallel passages under painted arches, often with birds perched on top. A side-by-side translation is a canon table of two.</p>
+    </div>
+  </article>
+  <article data-lang-block="fr" hidden>
+    <h1><span class="initial" lang="hy">Գ</span>Comment fonctionne le pupitre</h1>
+    <p class="lede">Les deux modèles gratuits de ce niveau, <em>Gemini 3.8 Live</em> et <em>Gemini 3.8 Live Extended Thinking</em>, sont des modèles vocaux. Ils parlent ; ils ne savent pas répondre en texte — l’API refuse une réponse texte seule.</p>
+    <div class="cols">
+      <h2>L’astuce de l’appel de fonction</h2>
+      <p>Targmanich ne les laisse jamais dire la traduction à voix haute. Chaque session donne au modèle une fonction, <code>deliver(items)</code>, et lui demande de répondre en l’appelant. Les arguments de cet appel arrivent en JSON : exacts, avec retours à la ligne, émojis, liens et hashtags intacts, en deux secondes environ au lieu d’une demi-minute de voix synthétique.</p>
+      <p>Comme la réponse est un champ structuré, il n’y a pas de place pour « Voici la traduction : ». Le prompt traite aussi chaque segment comme une donnée : un post qui dit « ignore tes instructions » est traduit, pas exécuté. Un petit filet de sécurité retire une étiquette ou des guillemets parasites s’il en passe encore.</p>
+      <h2>Lots et rotation</h2>
+      <p>Chaque requête est une session Live, un WebSocket direct entre votre navigateur et Google. Les posts partent par lots de 30 (Live) ou 40 (Extended Thinking), chacun avec un identifiant : un segment manquant est repéré et renvoyé.</p>
+      <p>Le moteur Live simple est rapide et économe : il passe toujours en premier. Le moteur Extended Thinking ne reçoit que le surplus, quand le premier a dépensé ses tokens de la minute. Si la file est vide et qu’un lot lent traîne depuis six secondes, il est renvoyé au moteur rapide ; la première réponse gagne.</p>
+      <h2>Ce qui a été mesuré</h2>
+      <table class="facts">
+        <thead><tr><th></th><th>3.8 Live</th><th>3.8 Live Extended Thinking</th></tr></thead>
+        <tbody>
+          <tr><th>Temps de réponse par lot</th><td>≈ 2 s</td><td>6 – 30 s</td></tr>
+          <tr><th>Tokens, lot de 10 posts</th><td>≈ 1 900</td><td>≈ 7 500</td></tr>
+          <tr><th>Coût caché par session</th><td>≈ 1 000</td><td>≈ 3 400, facturé deux fois</td></tr>
+          <tr><th>Doit parler avant l’appel</th><td>non</td><td>oui, un mot bref</td></tr>
+          <tr><th>Limite gratuite</th><td>65 000 tokens/min</td><td>65 000 tokens/min</td></tr>
+        </tbody>
+      </table>
+      <p>300 posts arméniens courts ont pris 15 secondes avec une seule clé. Une fois les deux budgets par minute utilisés, une clé tient environ 14 posts par seconde. Des clés de projets Google Cloud distincts ajoutent des voies.</p>
+      <h2>Confidentialité</h2>
+      <p>Il n’y a pas de serveur. Vos clés et vos textes vont de ce navigateur à l’API de Google, nulle part ailleurs. Les clés ne sont enregistrées sur l’appareil que si vous cochez « mémoriser ».</p>
+      <h2>Limites</h2>
+      <p>Les modèles gratuits changent. Si Google les renomme, modifiez les identifiants dans <em>Clés &amp; moteurs</em>. Le niveau gratuit n’accepte que quelques sessions simultanées par clé ; quand le serveur refuse, Targmanich divise son rythme par deux, attend et réessaie.</p>
+      <h2>Le nom</h2>
+      <p><span lang="hy">Թարգմանիչ</span> (<em>targmanitch</em>) veut dire « traducteur » en arménien. Vers 405, Mesrop Machtots a créé l’alphabet arménien pour que l’on puisse traduire des textes en arménien ; l’Église fête encore les Saints Traducteurs chaque mois d’octobre. Les arcs au-dessus du pupitre viennent des tables de canons des Évangiles arméniens : des colonnes de passages parallèles sous des arcs peints, souvent surmontés d’oiseaux. Une traduction côte à côte est une table de canons à deux colonnes.</p>
+    </div>
+  </article>
+</section>
+
+</main>
+
+<footer class="foot">
+  <svg class="rosette" aria-hidden="true"><use href="#rosette"/></svg>
+  <p><span lang="hy">Թարգմանիչ</span> · <a href="https://github.com/ForGit-dc/traduction_with_free_gemini_models">source</a> · Gemini 3.8 Live</p>
+</footer>
+
+<dialog id="keysDialog" class="sheet-dialog" aria-labelledby="dlgTitle">
+  <form method="dialog">
+    <h2 id="dlgTitle"><span class="initial small" lang="hy">Կ</span><span data-i18n="dlg.title">Keys &amp; engines</span></h2>
+
+    <label class="field block" for="keysInput"><span class="rubric" data-i18n="dlg.keys">Gemini API keys — one per line</span></label>
+    <textarea id="keysInput" class="ruled small mono" rows="3" spellcheck="false" autocomplete="off" placeholder="AIza…"></textarea>
+    <label class="check"><input id="rememberKeys" type="checkbox"> <span data-i18n="dlg.remember">Remember the keys on this device</span></label>
+    <p class="fine" data-i18n="dlg.fine"></p>
+
+    <fieldset class="engines">
+      <legend class="rubric" data-i18n="dlg.engines">Engines</legend>
+      <div id="engineRows"></div>
+    </fieldset>
+
+    <label class="field block" for="glossaryInput"><span class="rubric" data-i18n="dlg.glossary">Glossary — one pair per line</span></label>
+    <textarea id="glossaryInput" class="ruled small" rows="3" spellcheck="false" data-i18n-ph="dlg.glossary.ph"></textarea>
+
+    <label class="field block" for="styleInput"><span class="rubric" data-i18n="dlg.style">Style notes</span></label>
+    <textarea id="styleInput" class="ruled small" rows="2" data-i18n-ph="dlg.style.ph"></textarea>
+
+    <div class="dlg-actions">
+      <button id="testBtn" class="plain" type="button" data-i18n="dlg.test">Test the keys</button>
+      <button class="seal small" value="close" data-i18n="dlg.close">Done</button>
+    </div>
+    <ul id="testOut" class="test-out"></ul>
+  </form>
+</dialog>
+
+</body>
+</html>
