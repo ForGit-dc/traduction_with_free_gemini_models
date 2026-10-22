@@ -4,12 +4,16 @@ import { cleanTranslation } from './prompt.js';
 const WINDOW_MS = 60_000;
 const MAX_ATTEMPTS = 4;
 const MAX_QUOTA_RETRIES = 12;
+const HEDGE_AFTER_MS = 6000; // a slow batch still running this long is re-sent to a fast lane
+const SLOW_LATENCY_S = 12; // typical answer time of the speaking engine
 
 /**
  * Spreads segments over "lanes" (one per API key × engine), keeps each lane
  * under its tokens-per-minute budget, and adapts concurrency to what the
- * server accepts. Fast lanes are served first; slow lanes only take work when
- * there is a real backlog, or when no fast lane is available.
+ * server accepts. Fast lanes are served first. A slow lane only takes the
+ * overflow: work the fast lanes cannot start within the slow lane's own
+ * answer time. When the queue runs dry, slow batches that are still out are
+ * re-sent to a free fast lane and the first answer wins.
  *
  * Work arrives as jobs (the desk, a batch run); each job has its own prompt
  * and can be paused or cancelled without touching the others. Lanes, and so
@@ -23,6 +27,8 @@ export class Scheduler extends EventTarget {
     super();
     this.lanes = [];
     this.queue = [];
+    this.flights = new Set();
+    this.fastDone = [];
     this.timer = null;
   }
 
@@ -196,8 +202,19 @@ export class Scheduler extends EventTarget {
     return batch;
   }
 
-  fastLaneReady(now) {
-    return this.lanes.some((l) => !l.engine.speaks && !l.disabled && l.cooldownUntil <= now);
+  laneOpen(lane, now) {
+    return !lane.disabled && lane.cooldownUntil <= now && !lane.waitingQuota && lane.inFlight < lane.conc;
+  }
+
+  // Should a slow lane help? Only if the fast lanes are out of budget, or if
+  // their current pace would leave the backlog waiting longer than a slow answer.
+  needsOverflow(now) {
+    const fast = this.lanes.filter((l) => !l.engine.speaks);
+    if (!fast.length || fast.every((l) => l.disabled || l.cooldownUntil > now || l.waitingQuota)) return true;
+    if (fast.some((l) => this.laneOpen(l, now))) return false;
+    this.fastDone = this.fastDone.filter((t) => now - t < 15_000);
+    const rate = this.fastDone.length / 15; // segments per second
+    return rate === 0 ? this.activeQueued() > 200 : this.activeQueued() / rate > SLOW_LATENCY_S;
   }
 
   activeQueued() {
@@ -215,16 +232,16 @@ export class Scheduler extends EventTarget {
       while (lane.inFlight < lane.conc) {
         const batch = this.peekBatch(lane);
         if (!batch.length) break;
-        // A slow lane is worth it only for a real backlog, or as a fallback.
-        if (lane.engine.speaks && this.fastLaneReady(now) && this.activeQueued() < lane.engine.batchSize) break;
+        if (lane.engine.speaks && !this.needsOverflow(now)) break;
         if (this.used(lane, now) + this.estimate(lane, batch) > lane.engine.tpm) { lane.waitingQuota = true; break; }
         const taken = new Set(batch);
         this.queue = this.queue.filter((it) => !taken.has(it));
         this.dispatch(lane, batch);
       }
     }
+    if (!this.activeQueued()) this.hedge(now);
     this.emit('tick');
-    const inFlight = this.lanes.some((l) => l.inFlight > 0);
+    const inFlight = this.flights.size > 0;
     if (!inFlight && !this.activeQueued()) this.sleep();
     if (!inFlight && this.activeQueued() && this.lanes.length && this.lanes.every((l) => l.disabled)) {
       this.sleep();
@@ -232,13 +249,33 @@ export class Scheduler extends EventTarget {
     }
   }
 
+  hedge(now) {
+    for (const f of this.flights) {
+      if (f.hedged || !f.lane.engine.speaks || now - f.started < HEDGE_AFTER_MS) continue;
+      const pending = f.batch.filter((it) => it.state !== 'done' && !it.job.paused);
+      if (!pending.length) continue;
+      const lane = this.lanes.find((l) => !l.engine.speaks && this.laneOpen(l, now)
+        && this.used(l, now) + this.estimate(l, pending) <= l.engine.tpm);
+      if (!lane) return;
+      f.hedged = true;
+      this.dispatch(lane, pending);
+    }
+  }
+
   dispatch(lane, batch) {
     const job = batch[0].job;
     const entry = { t: Date.now(), tokens: this.estimate(lane, batch) };
+    const flight = { lane, batch, started: Date.now(), hedged: false, ctrl: new AbortController() };
+    const relay = () => flight.ctrl.abort();
+    job.controller.signal.addEventListener('abort', relay, { once: true });
+    this.flights.add(flight);
     lane.log.push(entry);
     lane.inFlight += 1;
     job.inFlight += 1;
-    for (const it of batch) it.state = 'working';
+    for (const it of batch) { it.state = 'working'; it.flights = (it.flights || 0) + 1; }
+    const land = () => { for (const it of batch) it.flights -= 1; };
+    // Items still out in another flight, or already done, are not retried here.
+    const orphans = () => batch.filter((it) => it.state !== 'done' && it.flights === 0);
 
     translateBatch({
       apiKey: lane.key,
@@ -246,8 +283,9 @@ export class Scheduler extends EventTarget {
       items: batch.map((it, i) => ({ i, text: it.text })),
       systemPrompt: lane.engine.speaks ? job.prompts.speaking : job.prompts.silent,
       detect: job.detect,
-      signal: job.controller.signal,
+      signal: flight.ctrl.signal,
     }).then((res) => {
+      land();
       entry.tokens = res.partialUsage ? Math.max(entry.tokens, res.tokens * 2) : res.tokens || entry.tokens;
       lane.tokens += entry.tokens;
       lane.okStreak += 1;
@@ -256,32 +294,41 @@ export class Scheduler extends EventTarget {
       if (lane.okStreak >= 3 && lane.conc < lane.engine.maxConc) { lane.conc += 1; lane.okStreak = 0; }
 
       const byIndex = new Map(res.items.map((r) => [r.i, r]));
-      const missing = [];
+      const now = Date.now();
       batch.forEach((it, i) => {
+        if (it.state === 'done') return;
         const r = byIndex.get(i);
-        if (!r || (!r.t.trim() && it.text.trim())) { missing.push(it); return; }
+        if (!r || (!r.t.trim() && it.text.trim())) return;
         it.state = 'done';
         lane.done += 1;
-        job.finishedAt.push(Date.now());
+        job.finishedAt.push(now);
+        if (!lane.engine.speaks) this.fastDone.push(now);
         this.emit('result', { job, id: it.id, text: cleanTranslation(r.t, it.text), lang: r.l, lane, ms: res.ms, tokens: entry.tokens });
       });
+      const missing = orphans();
       if (missing.length) this.retry(missing, new LiveError('Segment missing from the answer.', 'empty'));
+      // A hedged twin that is now fully answered can stop.
+      for (const f of this.flights) if (f !== flight && f.batch.every((it) => it.state === 'done')) f.ctrl.abort();
     }).catch((err) => {
-      if (err.kind === 'aborted') { for (const it of batch) if (it.state === 'working') it.state = 'queued'; return; }
+      land();
+      if (err.kind === 'aborted') return;
       lane.okStreak = 0;
       lane.lastError = err.message;
+      const left = orphans();
       if (err.kind === 'quota') {
         lane.conc = Math.max(1, Math.floor(lane.conc / 2));
         lane.cooldownUntil = Date.now() + lane.backoff;
         lane.backoff = Math.min(lane.backoff * 2, 60_000);
-        this.requeue(batch, { quota: true });
+        this.requeue(left, { quota: true });
       } else if (err.kind === 'auth' || err.kind === 'config') {
         lane.disabled = err.message;
-        this.requeue(batch, { free: true });
+        this.requeue(left, { free: true });
       } else {
-        this.retry(batch, err);
+        this.retry(left, err);
       }
     }).finally(() => {
+      job.controller.signal.removeEventListener('abort', relay);
+      this.flights.delete(flight);
       lane.inFlight -= 1;
       job.inFlight -= 1;
       if (!job.inFlight && !this.queuedFor(job)) this.emit('jobdone', { job });
