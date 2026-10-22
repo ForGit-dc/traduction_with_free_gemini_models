@@ -259,8 +259,8 @@
         </tbody>
       </table>
       <p>300 short Armenian posts took 15 seconds on one key. Once both minute budgets are in use, one key holds about 14 posts per second. Keys from separate Google Cloud projects add more lanes.</p>
-      <h2>Privacy</h2>
-      <p>There is no server. Your keys and your texts go from this browser to Google’s API and nowhere else. Keys are saved on this device only if you tick “remember”.</p>
+      <h2>Privacy and keys</h2>
+      <p>With no key of your own, texts pass through a small relay (a Supabase Edge Function) that adds the shared key and forwards them to Google. It stores nothing, and its free quota is shared by everyone. With your own key, texts go straight from this browser to Google’s API; the key is saved on this device only if you tick “remember”.</p>
       <h2>Limits</h2>
       <p>Free models come and go. If Google renames them, change the model ids under <em>Keys &amp; engines</em>. The free tier accepts only a few simultaneous sessions per key; when the server refuses, Targmanich halves its pace, waits, and tries again.</p>
       <h2>The name</h2>
@@ -289,8 +289,8 @@
         </tbody>
       </table>
       <p>300 posts arméniens courts ont pris 15 secondes avec une seule clé. Une fois les deux budgets par minute utilisés, une clé tient environ 14 posts par seconde. Des clés de projets Google Cloud distincts ajoutent des voies.</p>
-      <h2>Confidentialité</h2>
-      <p>Il n’y a pas de serveur. Vos clés et vos textes vont de ce navigateur à l’API de Google, nulle part ailleurs. Les clés ne sont enregistrées sur l’appareil que si vous cochez « mémoriser ».</p>
+      <h2>Confidentialité et clés</h2>
+      <p>Sans clé personnelle, les textes passent par un petit relais (une Edge Function Supabase) qui ajoute la clé partagée et les transmet à Google. Il ne stocke rien, et son quota gratuit est partagé par tout le monde. Avec votre propre clé, les textes vont directement de ce navigateur à l’API de Google ; la clé n’est enregistrée sur l’appareil que si vous cochez « mémoriser ».</p>
       <h2>Limites</h2>
       <p>Les modèles gratuits changent. Si Google les renomme, modifiez les identifiants dans <em>Clés &amp; moteurs</em>. Le niveau gratuit n’accepte que quelques sessions simultanées par clé ; quand le serveur refuse, Targmanich divise son rythme par deux, attend et réessaie.</p>
       <h2>Le nom</h2>
@@ -310,7 +310,8 @@
   <form method="dialog">
     <h2 id="dlgTitle"><span class="initial small" lang="hy">Կ</span><span data-i18n="dlg.title">Keys &amp; engines</span></h2>
 
-    <label class="field block" for="keysInput"><span class="rubric" data-i18n="dlg.keys">Gemini API keys — one per line</span></label>
+    <label class="field block" for="keysInput"><span class="rubric" data-i18n="dlg.keys">Your Gemini API keys — one per line (optional)</span></label>
+    <p class="fine" data-i18n="dlg.shared"></p>
     <textarea id="keysInput" class="ruled small mono" rows="3" spellcheck="false" autocomplete="off" placeholder="AIza…"></textarea>
     <label class="check"><input id="rememberKeys" type="checkbox"> <span data-i18n="dlg.remember">Remember the keys on this device</span></label>
     <p class="fine" data-i18n="dlg.fine"></p>

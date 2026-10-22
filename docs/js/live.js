@@ -1,4 +1,5 @@
 import { DELIVER, deliverTool, userTurn } from './prompt.js';
+import { RELAY, RELAY_WS } from './config.js';
 
 const ENDPOINT = 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent';
 
@@ -10,7 +11,9 @@ export class LiveError extends Error {
   }
 }
 
-function classify(code, reason) {
+function classify(rawCode, reason) {
+  // The relay re-codes upstream closes into the 4000 range (1011 → 4011).
+  const code = rawCode >= 4000 && rawCode < 5000 ? rawCode - 3000 : rawCode;
   const r = String(reason || '');
   if (/quota|exceeded|RESOURCE_EXHAUSTED|rate limit|too many/i.test(r)) return 'quota';
   if (/api key|API_KEY|PERMISSION_DENIED|unauthori[sz]ed|forbidden|not authorized/i.test(r)) return 'auth';
@@ -63,7 +66,7 @@ export function translateBatch({ apiKey, engine, items, systemPrompt, detect, si
     const onAbort = () => finish(new LiveError('Stopped.', 'aborted'));
     if (signal?.aborted) return onAbort();
     signal?.addEventListener('abort', onAbort);
-    ws = new WebSocket(`${ENDPOINT}?key=${encodeURIComponent(apiKey)}`);
+    ws = new WebSocket(apiKey === RELAY ? RELAY_WS : `${ENDPOINT}?key=${encodeURIComponent(apiKey)}`);
 
     ws.onopen = () => {
       const generationConfig = { responseModalities: ['AUDIO'], temperature: 0.2 };

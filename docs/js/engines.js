@@ -35,8 +35,10 @@ export const DEFAULT_ENGINES = [
   },
 ];
 
-export function buildLanes(keys, engines) {
+// Without keys of the visitor's own, every engine runs through the shared relay.
+export function buildLanes(keys, engines, relay = null) {
   const lanes = [];
+  if (!keys.length && relay) keys = [relay];
   keys.forEach((key, k) => {
     for (const engine of engines) {
       if (!engine.enabled) continue;

@@ -5,6 +5,7 @@ import { Scheduler } from './scheduler.js';
 import { translateBatch } from './live.js';
 import { parseFile, splitText, textsOf, exportDataset, download } from './formats.js';
 import { setLang, getLang, t, num } from './i18n.js';
+import { RELAY, relayReady } from './config.js';
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => [...document.querySelectorAll(sel)];
@@ -37,6 +38,7 @@ const state = {
     return { ...d, ...picked };
   }),
   keys: (local && read(local, KEY_STORE)) || (session && read(session, KEY_STORE)) || [],
+  relay: false, // the shared-key relay answered "ready"
 };
 
 function persist() {
@@ -61,7 +63,7 @@ function persistKeys() {
 // ---------- scheduler ----------
 
 const scheduler = new Scheduler();
-const applyLanes = () => scheduler.setLanes(buildLanes(state.keys, state.engines));
+const applyLanes = () => scheduler.setLanes(buildLanes(state.keys, state.engines, state.relay ? RELAY : null));
 
 function promptsFor(src, tgt) {
   const base = { source: src, target: tgt, glossary: state.glossary, instructions: state.style };
@@ -165,7 +167,7 @@ function engineLabel() {
 function translateDesk() {
   const text = $('#srcText').value;
   if (!text.trim()) return;
-  if (!state.keys.length) {
+  if (!scheduler.lanes.length) {
     deskStatus(t('need.key'), true);
     openKeys();
     return;
@@ -306,7 +308,7 @@ function setDataset(ds) {
 
 function startBatch() {
   if (!batch.ds) return;
-  if (!state.keys.length) { openKeys(); return; }
+  if (!scheduler.lanes.length) { openKeys(); return; }
   if (batch.job && batch.job.paused && scheduler.queuedFor(batch.job)) {
     scheduler.resumeJob(batch.job);
     renderBatch();
@@ -532,7 +534,9 @@ function renderKeychip() {
   const k = state.keys.length;
   const l = scheduler.lanes.length;
   chip.classList.toggle('has-keys', k > 0);
-  $('#keysState').textContent = k ? t(k === 1 ? 'keys.some' : 'keys.many', { k, l }) : t('keys.none');
+  chip.classList.toggle('shared', !k && state.relay);
+  $('#keysState').textContent = k ? t(k === 1 ? 'keys.some' : 'keys.many', { k, l })
+    : state.relay ? t('keys.shared', { l }) : t('keys.none');
 }
 
 function engineRows() {
@@ -604,11 +608,13 @@ async function testKeys() {
   out.replaceChildren();
   const prompts = promptsFor('hy', state.tgt === 'hy' ? 'en' : state.tgt);
   const tasks = [];
-  state.keys.forEach((key, k) => {
+  const keys = state.keys.length ? state.keys : state.relay ? [RELAY] : [];
+  keys.forEach((key, k) => {
     for (const engine of state.engines.filter((e) => e.enabled)) {
       const li = document.createElement('li');
       const b = document.createElement('b');
-      b.textContent = `${state.keys.length > 1 ? `key ${k + 1} · ` : ''}${engine.label}`;
+      const who = key === RELAY ? `${t('shared')} · ` : keys.length > 1 ? `key ${k + 1} · ` : '';
+      b.textContent = `${who}${engine.label}`;
       li.append(b, document.createTextNode(` — ${t('test.run')}`));
       out.append(li);
       const t0 = performance.now();
@@ -772,3 +778,9 @@ applyLanes();
 wire();
 applyUiLang();
 showTab(state.tab);
+relayReady().then((ready) => {
+  state.relay = ready;
+  applyLanes();
+  renderKeychip();
+  renderLanes();
+});
