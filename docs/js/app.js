@@ -260,7 +260,7 @@ function updateCount() {
 // ---------- batch ----------
 
 const PAGE = 50;
-const batch = { ds: null, raw: null, texts: [], results: [], job: null, filter: 'all', page: 0, t0: 0 };
+const batch = { ds: null, raw: null, texts: [], results: [], job: null, filter: 'all', page: 0, t0: 0, avg: 0 };
 
 function batchRunning() {
   return Boolean(batch.job && !batch.job.paused && (batch.job.inFlight || scheduler.queuedFor(batch.job)));
@@ -329,10 +329,21 @@ function startBatch() {
   const job = scheduler.createJob({ prompts: promptsFor(state.src, state.tgt), detect: state.src === AUTO });
   batch.job = job;
   batch.t0 = performance.now();
+  batch.avg = 0;
+  let count = 0;
   job.on = {
-    result({ id, text, lang, lane }) { if (batch.job === job) { batch.results[id] = { text, lang, engine: lane.engine.id }; queueRender(); } },
+    result({ id, text, lang, lane }) {
+      if (batch.job !== job) return;
+      batch.results[id] = { text, lang, engine: lane.engine.id };
+      count += 1;
+      queueRender();
+    },
     failed({ id, error }) { if (batch.job === job) { batch.results[id] = { error }; queueRender(); } },
-    jobdone() { queueRender(); },
+    jobdone() {
+      // Average over the whole run, shown once the engines are idle again.
+      if (batch.job === job) batch.avg = count / ((performance.now() - batch.t0) / 1000);
+      queueRender();
+    },
   };
   scheduler.add(job, segments);
   renderBatch();
@@ -391,7 +402,7 @@ function renderBatch() {
 
   $('#tDone').textContent = num(done);
   $('#tTotal').textContent = total ? t('t.of', { n: num(total) }) : '';
-  $('#tRate').textContent = running ? stats.perSecond.toFixed(1) : '0';
+  $('#tRate').textContent = (running ? stats.perSecond : batch.avg).toFixed(1);
   $('#tEta').textContent = running ? fmtEta(left / stats.perSecond) : '—';
   $('#tFail').textContent = num(failed);
   $('#progressBar').style.width = total ? `${((done + failed) / total) * 100}%` : '0';
