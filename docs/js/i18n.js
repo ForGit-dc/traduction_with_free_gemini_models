@@ -234,3 +234,7 @@ export function t(key, vars = {}) {
 export function num(n) {
   return new Intl.NumberFormat(current === 'fr' ? 'fr-FR' : 'en-US').format(Math.round(n));
 }
+
+export function dec(n, digits = 1) {
+  return new Intl.NumberFormat(current === 'fr' ? 'fr-FR' : 'en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(n);
+}

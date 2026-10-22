@@ -4,7 +4,7 @@ import { buildSystemPrompt } from './prompt.js';
 import { Scheduler } from './scheduler.js';
 import { translateBatch } from './live.js';
 import { parseFile, splitText, textsOf, exportDataset, download } from './formats.js';
-import { setLang, getLang, t, num } from './i18n.js';
+import { setLang, getLang, t, num, dec } from './i18n.js';
 import { RELAY, relayReady } from './config.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -207,7 +207,7 @@ function translateDesk() {
       if (desk.job !== job) return;
       writing(false);
       desk.job = null;
-      const secs = ((performance.now() - desk.t0) / 1000).toFixed(1);
+      const secs = dec((performance.now() - desk.t0) / 1000);
       const tokens = [...batches.values()].reduce((a, b) => a + b, 0);
       let line = got.size ? t('colophon', { engine: [...engines].join(' + '), s: secs, tokens: num(tokens) }) : '';
       if (langs.size) {
@@ -404,7 +404,7 @@ function renderBatch() {
 
   $('#tDone').textContent = num(done);
   $('#tTotal').textContent = total ? t('t.of', { n: num(total) }) : '';
-  $('#tRate').textContent = (running ? stats.perSecond : batch.avg).toFixed(1);
+  $('#tRate').textContent = dec(running ? stats.perSecond : batch.avg);
   $('#tEta').textContent = running ? fmtEta(left / stats.perSecond) : '—';
   $('#tFail').textContent = num(failed);
   $('#progressBar').style.width = total ? `${((done + failed) / total) * 100}%` : '0';
@@ -626,7 +626,7 @@ async function testKeys() {
         detect: false,
       }).then((res) => {
         li.className = 'ok';
-        li.lastChild.textContent = ` — ${t('test.ok', { s: ((performance.now() - t0) / 1000).toFixed(1), text: res.items[0]?.t ?? '' })}`;
+        li.lastChild.textContent = ` — ${t('test.ok', { s: dec((performance.now() - t0) / 1000), text: res.items[0]?.t ?? '' })}`;
       }).catch((err) => {
         li.className = 'bad';
         li.lastChild.textContent = ` — ${err.message}`;
