@@ -1,5 +1,6 @@
 const STRINGS = {
   en: {
+    'credit': 'Produced by Anass El Basraoui',
     'tab.desk': 'Desk',
     'tab.batch': 'Batch',
     'tab.notes': 'Notes',
@@ -103,6 +104,7 @@ const STRINGS = {
     'test.run': 'asking…',
   },
   fr: {
+    'credit': 'Produit par Anass El Basraoui',
     'tab.desk': 'Pupitre',
     'tab.batch': 'Lots',
     'tab.notes': 'Notes',

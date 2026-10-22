@@ -143,6 +143,18 @@ kbd {
 
 /* ---------- masthead ---------- */
 
+.imprint {
+  display: flex;
+  flex-direction: column;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 12px var(--gutter) 0;
+  line-height: 1.2;
+}
+.imprint a { align-self: flex-start; font: 700 1rem var(--font-text); letter-spacing: 0.02em; color: var(--ink); text-decoration: none; }
+.imprint a:hover { color: var(--vermilion); }
+.imprint small { font-size: 0.74rem; font-style: italic; color: var(--ink-3); }
+
 .mast {
   display: flex;
   align-items: center;
