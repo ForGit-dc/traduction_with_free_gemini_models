@@ -143,10 +143,12 @@ kbd {
 
 /* ---------- masthead ---------- */
 
+/* Centred in the free stretch of the header line, between the tabs and the tools. */
 .imprint {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
+  margin-inline: auto;
   line-height: 1.15;
 }
 .imprint a { font: 700 1rem var(--font-text); letter-spacing: 0.02em; color: var(--ink); text-decoration: none; }
@@ -181,7 +183,7 @@ kbd {
 .mark-name { font: 700 1.55rem var(--font-sc); letter-spacing: 0.05em; text-transform: lowercase; }
 .mark-sub { font-size: 0.82rem; color: var(--ink-3); letter-spacing: 0.04em; }
 
-.tabs { display: flex; gap: 4px; margin-right: auto; }
+.tabs { display: flex; gap: 4px; }
 .tabs button {
   display: flex;
   align-items: baseline;
@@ -742,7 +744,7 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 var(--gutter); }
   .mast { gap: 12px; }
   .tabs { order: 3; width: 100%; margin: 0; border-top: 1px solid var(--rule); padding-top: 4px; }
   .tabs button { flex: 1; justify-content: center; padding: 8px 4px 6px; }
-  .imprint { order: 1; margin-left: auto; }
+  .imprint { order: 1; margin: 0 0 0 auto; align-items: flex-end; }
   .mast-tools { order: 2; margin-left: auto; }
   .keychip-text > span { display: none; }
   .keychip { padding: 6px 10px; }
