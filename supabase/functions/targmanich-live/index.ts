@@ -21,14 +21,17 @@ const relayCode = (code: number) => (code === 1000 || (code >= 3000 && code < 50
 const clip = (reason: string) => new TextEncoder().encode(reason).length > 120 ? reason.slice(0, 60) : reason;
 
 Deno.serve((req) => {
+  const key = Deno.env.get("GEMINI_API_KEY");
   if ((req.headers.get("upgrade") || "").toLowerCase() !== "websocket") {
-    return new Response("Targmanich relay: WebSocket only.", { status: 426 });
+    // Plain GET: a health check the page reads before offering the shared key.
+    return new Response(JSON.stringify({ relay: "targmanich", ready: Boolean(key) }), {
+      headers: { "content-type": "application/json", "access-control-allow-origin": "*" },
+    });
   }
   const origin = req.headers.get("origin") || "";
   if (!ORIGINS.some((re) => re.test(origin))) {
     return new Response("Origin not allowed.", { status: 403 });
   }
-  const key = Deno.env.get("GEMINI_API_KEY");
   if (!key) return new Response("Relay not configured.", { status: 503 });
 
   const { socket: client, response } = Deno.upgradeWebSocket(req, { idleTimeout: 0 });
