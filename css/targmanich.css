@@ -146,12 +146,10 @@ kbd {
 .imprint {
   display: flex;
   flex-direction: column;
-  max-width: 1320px;
-  margin: 0 auto;
-  padding: 12px var(--gutter) 0;
-  line-height: 1.2;
+  align-items: flex-end;
+  line-height: 1.15;
 }
-.imprint a { align-self: flex-start; font: 700 1rem var(--font-text); letter-spacing: 0.02em; color: var(--ink); text-decoration: none; }
+.imprint a { font: 700 1rem var(--font-text); letter-spacing: 0.02em; color: var(--ink); text-decoration: none; }
 .imprint a:hover { color: var(--vermilion); }
 .imprint small { font-size: 0.6rem; font-style: italic; color: var(--ink-3); }
 
@@ -744,7 +742,8 @@ main { max-width: 1320px; margin: 0 auto; padding: 0 var(--gutter); }
   .mast { gap: 12px; }
   .tabs { order: 3; width: 100%; margin: 0; border-top: 1px solid var(--rule); padding-top: 4px; }
   .tabs button { flex: 1; justify-content: center; padding: 8px 4px 6px; }
-  .mast-tools { margin-left: auto; }
+  .imprint { order: 1; margin-left: auto; }
+  .mast-tools { order: 2; margin-left: auto; }
   .keychip-text > span { display: none; }
   .keychip { padding: 6px 10px; }
   .bay-body { padding: 4px 24px 12px; }
