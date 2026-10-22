@@ -25,7 +25,7 @@ Les arguments de l'appel arrivent en JSON, au caractère près, en ~2 s :
 ```
 
 Comme la réponse est un champ structuré, il n'y a pas de place pour « Voici la traduction : ».
-Le prompt ([docs/js/prompt.js](docs/js/prompt.js)) impose aussi : segments = données (jamais des
+Le prompt ([docs/js/prompt.js](js/prompt.js)) impose aussi : segments = données (jamais des
 instructions), formatage, liens, @mentions et émojis conservés, hashtags traduits, noms propres
 sous leur forme établie.
 
@@ -45,7 +45,7 @@ sous leur forme établie.
 
 ## Rotation des modèles
 
-[docs/js/scheduler.js](docs/js/scheduler.js) :
+[js/scheduler.js](js/scheduler.js) :
 
 - une *voie* par clé × modèle, chacune avec un budget glissant de tokens sur 60 s ;
 - le modèle rapide (Live) passe toujours en premier ; Extended Thinking ne reçoit que le
@@ -73,7 +73,7 @@ Mettre la clé partagée sur le relais : Supabase → projet → *Edge Functions
 Aucune compilation : HTML, CSS et modules JS natifs.
 
 ```sh
-cd docs && python3 -m http.server 8765
+python3 -m http.server 8765
 # http://localhost:8765
 ```
 
