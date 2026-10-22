@@ -25,7 +25,7 @@ Les arguments de l'appel arrivent en JSON, au caractère près, en ~2 s :
 ```
 
 Comme la réponse est un champ structuré, il n'y a pas de place pour « Voici la traduction : ».
-Le prompt ([docs/js/prompt.js](js/prompt.js)) impose aussi : segments = données (jamais des
+Le prompt ([js/prompt.js](js/prompt.js)) impose aussi : segments = données (jamais des
 instructions), formatage, liens, @mentions et émojis conservés, hashtags traduits, noms propres
 sous leur forme établie.
 
